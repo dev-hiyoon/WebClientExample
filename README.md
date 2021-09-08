@@ -25,7 +25,7 @@ PS C:\Users\11102>java -jar D:\03.작업공간\02.hiyoon\SimpleRestApi\build\lib
 PS C:\Users\11102>java -jar D:\03.작업공간\02.hiyoon\ActuatorMonitor\build\libs\ActuatorMonitor-0.0.1-SNAPSHOT.jar
 ```
 
-* [Local Actuator Admin](http://localhost:8000/actuator)
+* [http://localhost:8000/actuator](http://localhost:8000/actuator)
 
 
 ![Response_Time_Graph](webclient_Response_time_graph.PNG)
