@@ -1,4 +1,4 @@
-package com.hiyoon.webclientexample;
+package com.hiyoon.webclientexample.example.compare;
 
 import com.hiyoon.webclientexample.vo.UserVo;
 import lombok.RequiredArgsConstructor;
@@ -8,10 +8,12 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
+import static com.hiyoon.webclientexample.codes.Const.GIT_ENDPOINT_SIMPLE;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class UserService {
+public class CompareService {
 
     private final WebClient webClient;
     private final RestTemplate restTemplate;
@@ -27,14 +29,14 @@ public class UserService {
     public UserVo getUserWithWebClient(String name) {
         log.info("################# getUserWithWebClient");
         return webClient.get()
-                .uri(name)
+                .uri(GIT_ENDPOINT_SIMPLE + name)
                 .retrieve()
                 .bodyToMono(UserVo.class).block();
     }
 
     public UserVo getUserWithRestTemplate(String name) {
         log.info("################# getUserWithRestTemplate");
-        return restTemplate.getForObject(name, UserVo.class);
+        return restTemplate.getForObject(GIT_ENDPOINT_SIMPLE + name, UserVo.class);
     }
 
 }

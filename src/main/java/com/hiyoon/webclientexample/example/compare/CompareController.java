@@ -1,4 +1,4 @@
-package com.hiyoon.webclientexample;
+package com.hiyoon.webclientexample.example.compare;
 
 import com.hiyoon.webclientexample.vo.UserVo;
 import lombok.RequiredArgsConstructor;
@@ -10,22 +10,22 @@ import org.springframework.web.bind.annotation.RestController;
 
 @Slf4j
 @RestController
-@RequestMapping(value = "/users")
+@RequestMapping(value = "/compare")
 @RequiredArgsConstructor
-public class UserController {
+public class CompareController {
 
-    private final UserService userService;
+    private final CompareService compareService;
 
     @GetMapping(value = "/wc/{name}")
     public UserVo getUserWithWebClient(@PathVariable("name") String name) {
         log.info("############# getUser. name: {}", name);
-        return userService.getUserWithWebClient(name);
+        return compareService.getUserWithWebClient(name);
     }
 
     @GetMapping(value = "/rt/{name}")
     public UserVo getUserWithRestTemplate(@PathVariable("name") String name) {
         log.info("############# getUser. name: {}", name);
-        return userService.getUserWithRestTemplate(name);
+        return compareService.getUserWithRestTemplate(name);
     }
 
 }

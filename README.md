@@ -1,42 +1,117 @@
 # Webclient
 
-### What Is the WebClient?
-Simply put, WebClient is an interface representing the main entry point for performing web requests.
-It was created as part of the Spring Web Reactive module, and will be replacing the classic RestTemplate in these scenarios. In addition, the new client is a reactive, non-blocking solution that works over the HTTP/1.1 protocol.
-It's important to note that even though it is, in fact, a non-blocking client and it belongs to the spring-webflux library, the solution offers support for both synchronous and asynchronous operations, making it suitable also for applications running on a Servlet Stack.
-This can be achieved by blocking the operation to obtain the result. Of course, this practice is not suggested if we're working on a Reactive Stack.
-Finally, the interface has a single implementation, the DefaultWebClient class, which we'll be working with.
+### WebClient란?
 
-https://happycloud-lee.tistory.com/220
+Spring WebFlux includes a reactive, non-blocking WebClient for HTTP requests. The client has a functional, fluent API with reactive types for declarative composition, see webflux-reactive-libraries. WebFlux client and server rely on the same non-blocking codecs to encode and decode request and response content.
 
-### RestTemplate vs WebClient
+Internally WebClient delegates to an HTTP client library. By default, it uses Reactor Netty, there is built-in support for the Jetty reactive HttpClient, and others can be plugged in through a ClientHttpConnector.
+
+<img src="https://img1.daumcdn.net/thumb/R1280x0/?scode=mtistory2&fname=https%3A%2F%2Fblog.kakaocdn.net%2Fdn%2FbmXoLk%2FbtqXXVBywK0%2F9jWK84VgwC4NqNWnTkY9H0%2Fimg.jpg"></img>
+
+### vs RestTemplate
+
+```console
+PS C:\Users\11102>java -jar D:\03.작업공간\02.hiyoon\WebClientExample\build\libs\WebClientExample-0.0.1-SNAPSHOT.jar --server.port=8081
+PS C:\Users\11102>java -jar D:\03.작업공간\02.hiyoon\WebClientExample\build\libs\WebClientExample-0.0.1-SNAPSHOT.jar --server.port=8082
+PS C:\Users\11102>java -jar D:\03.작업공간\02.hiyoon\SimpleRestApi\build\libs\SimpleRestApi-0.0.1-SNAPSHOT.jar --server.port=9091
+PS C:\Users\11102>java -jar D:\03.작업공간\02.hiyoon\SimpleRestApi\build\libs\SimpleRestApi-0.0.1-SNAPSHOT.jar --server.port=9092
+PS C:\Users\11102>java -jar D:\03.작업공간\02.hiyoon\ActuatorMonitor\build\libs\ActuatorMonitor-0.0.1-SNAPSHOT.jar
+```
+
+* [Local Actuator Admin](http://localhost:8000/actuator)
 
 
-java -jar D:\03.작업공간\02.hiyoon\WebClientExample\build\libs\WebClientExample-0.0.1-SNAPSHOT.jar --server.port=8081
-java -jar D:\03.작업공간\02.hiyoon\WebClientExample\build\libs\WebClientExample-0.0.1-SNAPSHOT.jar --server.port=8082
+![Response_Time_Graph](webclient_Response_time_graph.PNG)
+![Summary_Report](webclient_summary_report.PNG)
 
 
-### Reference Documentation
+### Schedulers
 
-For further reference, please consider the following sections:
+Schedulers provides various Scheduler flavors usable by publishOn or subscribeOn
 
-* [Official Gradle documentation](https://docs.gradle.org)
-* [Spring Boot Gradle Plugin Reference Guide](https://docs.spring.io/spring-boot/docs/2.5.4/gradle-plugin/reference/html/)
-* [Create an OCI image](https://docs.spring.io/spring-boot/docs/2.5.4/gradle-plugin/reference/html/#build-image)
-* [Spring Boot DevTools](https://docs.spring.io/spring-boot/docs/2.5.4/reference/htmlsingle/#using-boot-devtools)
-* [Spring Web](https://docs.spring.io/spring-boot/docs/2.5.4/reference/htmlsingle/#boot-features-developing-web-applications)
+* parallel(): Optimized for fast Runnable non-blocking executions
+* single(): Optimized for low-latency Runnable one-off executions
+* elastic(): Optimized for longer executions, an alternative for blocking tasks where the number of active tasks (and
+  threads) can grow indefinitely
+* boundedElastic(): Optimized for longer executions, an alternative for blocking tasks where the number of active
+  tasks (and threads) is capped
+* immediate(): to immediately run submitted Runnable instead of scheduling them (somewhat of a no-op or "null object"
+  Scheduler)
+* fromExecutorService(ExecutorService) to create new instances around Executors
 
-### Guides
+### Examples
 
-The following guides illustrate how to use some features concretely:
+1. 간단한 호출
 
-* [Building a RESTful Web Service](https://spring.io/guides/gs/rest-service/)
-* [Serving Web Content with Spring MVC](https://spring.io/guides/gs/serving-web-content/)
-* [Building REST services with Spring](https://spring.io/guides/tutorials/bookmarks/)
+WebClient의 GET 호출 예시입니다.
+
+```java
+
+public Mono<User> getUser(int id){
+        LOG.info(String.format("Calling getUser(%d)",id));
+
+        return webClient.get()
+        .uri("/user/{id}",id)
+        .retrieve()
+        .bodyToMono(User.class);
+}
+
+```
+
+2. 다른 서비스, 같은 타입
+
+다른 서비스지만 반환 타입이 같은 경우에는 Flux.merge를 사용합니다.
+
+```java
+
+public Mono<User> getUser(int id){
+        return webClient.get()
+        .uri("/user/{id}",id)
+        .retrieve()
+        .bodyToMono(User.class);
+}
+
+public Mono<User> getOtherUser(int id){
+        return webClient.get()
+        .uri("/otheruser/{id}",id)
+        .retrieve()
+        .bodyToMono(User.class);
+}
+
+public Flux<User> fetchUserAndOtherUser(int id){
+        return Flux.merge(getUser(id),getOtherUser(id))
+        .parallel()
+        .runOn(Schedulers.elastic())
+        .ordered((u1,u2)->u2.id()-u1.id());
+}
+```
+
+3. 다른 서비스, 다른 타입
+
+별개의 End-Point이면서 반환 타입도 다른 경우에는 각각의 Mono를 셋팅하여 Mono.zip으로 처리합니다.
+
+```java
+
+public Mono fetchUserAndItem(int userId,int itemId){
+        Mono<User> user=getUser(userId).subscribeOn(Schedulers.elastic());
+        Mono<Item> item=getItem(itemId).subscribeOn(Schedulers.elastic());
+
+        return Mono.zip(user,item,UserWithItem::new);
+}
+```
+
+4. One More Thing...
+
+동시호출과 순차호출이 Mix되어야하는 경우 Mono.then, Mono.zip으로 처리합니다.
+
+
+
+### Test
+
 
 ### Additional Links
 
-These additional references should also help you:
-
-* [Gradle Build Scans – insights for your project's build](https://scans.gradle.com#gradle)
+* [Spring WebClient 쉽게 이해하기](https://happycloud-lee.tistory.com/220)
+* [Simultaneous Spring WebClient Calls](https://www.baeldung.com/spring-webclient-simultaneous-calls)
+* [reactor.core.scheduler.Schedulers](https://projectreactor.io/docs/core/release/api/reactor/core/scheduler/Schedulers.html#elastic--)
 
