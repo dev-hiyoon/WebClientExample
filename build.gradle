@@ -1,5 +1,5 @@
 plugins {
-    id 'org.springframework.boot' version '2.5.4'
+    id 'org.springframework.boot' version '2.3.9.RELEASE'
     id 'io.spring.dependency-management' version '1.0.11.RELEASE'
     id 'java'
 }
@@ -19,9 +19,16 @@ repositories {
 }
 
 dependencies {
+    implementation group: 'org.springframework.boot', name: 'spring-boot-starter-actuator'
+    implementation group: 'de.codecentric', name: 'spring-boot-admin-starter-client', version: '2.3.1'
+
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation group: 'org.springframework.boot', name: 'spring-boot-starter-webflux'
-    implementation group: 'org.apache.httpcomponents', name: 'httpclient'
+    // https://mvnrepository.com/artifact/org.apache.httpcomponents/httpclient
+    implementation group: 'org.apache.httpcomponents', name: 'httpclient', version: '4.5.13'
+
+
+
     compileOnly 'org.projectlombok:lombok'
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
     annotationProcessor 'org.projectlombok:lombok'
