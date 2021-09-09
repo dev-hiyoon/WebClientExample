@@ -36,7 +36,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
-class UsageControllerTest {
+class UsageControllerMockWebServerTest {
 
     @Autowired
     private MockMvc mockMvc;
@@ -52,7 +52,7 @@ class UsageControllerTest {
 
     @DynamicPropertySource
     static void properties(DynamicPropertyRegistry r) {
-        r.add("user.server.url", () -> "http://localhost:" + mockBackEnd.getPort());
+        r.add("user.server.url", () -> "http://localhost:" + mockBackEnd.getPort() + "/");
     }
 
     @BeforeAll
@@ -96,9 +96,6 @@ class UsageControllerTest {
         log.info("########### getUser started!");
 
         // given
-//        mockBackEnd.enqueue(new MockResponse()
-//                .setBody(user1VoResponse)
-//                .addHeader("Content-Type", "application/json"));
 
         // when
         ResultActions perform = mockMvc.perform(MockMvcRequestBuilders.get("/usage/user")

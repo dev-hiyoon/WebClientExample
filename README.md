@@ -15,9 +15,7 @@ dependencies {
 }
 ```
 
-### Test
-
-### vs RestTemplate
+### RestTemplate과의 비교
 
 ```console
 >java -jar C:\Users\11102\Documents\01.workspace\02.hiyoon\WebClientExample\build\libs\WebClientExample-0.0.1-SNAPSHOT.jar --server.port=8081
@@ -50,7 +48,7 @@ Project Reactor의 핵심 패키지 중 하나인 reactor.core.scheduler에는 S
 
 1. 간단한 호출
 
-WebClient의 GET 호출 예시입니다.
+   WebClient의 GET 호출 예시입니다.
 
 ```java
 
@@ -67,7 +65,7 @@ private Mono<UserVo> getUser(String id){
 
 2. 다른 서비스, 같은 타입
 
-다른 서비스지만 반환 타입이 같은 경우에는 Flux.merge를 사용합니다.
+   다른 서비스지만 반환 타입이 같은 경우에는 Flux.merge를 사용합니다.
 
 ```java
 
@@ -100,7 +98,7 @@ public Flux<UserVo> mergeUser(String id){
 
 3. 다른 서비스, 다른 타입
 
-별개의 End-Point이면서 반환 타입도 다른 경우에는 각각의 Mono를 셋팅하여 Mono.zip으로 처리합니다.
+   별개의 End-Point이면서 반환 타입도 다른 경우에는 각각의 Mono를 셋팅하여 Mono.zip으로 처리합니다.
 
 ```java
 private Mono<UserVo> getUser(String id) {
@@ -129,9 +127,9 @@ public Mono fetchUserAndItem(int userId,int itemId){
 }
 ```
 
-4. 혼합...
+4. 혼합
 
-동시호출과 순차호출이 Mix되어야하는 경우 Mono.then, Mono.zip으로 처리합니다. ex) 다른 서비스, 서비스마다 페이징이 있는 경우
+   동시호출과 순차호출이 Mix되어야하는 경우 Mono.then, Mono.zip으로 처리합니다. ex) 다른 서비스, 서비스마다 페이징이 있는 경우
 
 ```java
 private Mono<UserVo> getUser(String id) {
@@ -152,41 +150,73 @@ private Mono<RepoVo> getRepo(String repoId) {
     .log();
 }
 public Mono<UserWithItem> mixUser(String id,String repoId){
-        Mono<List<UserVo>>users=getUser(id).subscribeOn(Schedulers.elastic())
-            .expand(response->{
-                if(StringUtils.isEmpty(response.getNextPageYn())||response.getNextPageYn().equals("N")){
-                    return Mono.empty();
-                }
-
-                return getUser(String.valueOf(Integer.valueOf(response.getId())+1)).subscribeOn(Schedulers.elastic());
-            }).collectList();
-        Mono<List<RepoVo>>item=getRepo(repoId).subscribeOn(Schedulers.elastic())
-            .expand(response->{
-                if(StringUtils.isEmpty(response.getNextPageYn())||response.getNextPageYn().equals("N")){
-                    return Mono.empty();
-                }
-
-                return getRepo(String.valueOf(Integer.valueOf(response.getId())+1)).subscribeOn(Schedulers.elastic());
-            }).collectList();
-        
-        return Mono.zip(users,item,UserWithItem::new)
-        .log();
+   Mono<List<UserVo>>users=getUser(id).subscribeOn(Schedulers.elastic())
+      .expand(response->{
+          if(StringUtils.isEmpty(response.getNextPageYn())||response.getNextPageYn().equals("N")){
+              return Mono.empty();
+          }
+   
+          return getUser(String.valueOf(Integer.valueOf(response.getId())+1)).subscribeOn(Schedulers.elastic());
+      }).collectList();
+   Mono<List<RepoVo>>item=getRepo(repoId).subscribeOn(Schedulers.elastic())
+      .expand(response->{
+          if(StringUtils.isEmpty(response.getNextPageYn())||response.getNextPageYn().equals("N")){
+              return Mono.empty();
+          }
+   
+          return getRepo(String.valueOf(Integer.valueOf(response.getId())+1)).subscribeOn(Schedulers.elastic());
+      }).collectList();
+   
+   return Mono.zip(users,item,UserWithItem::new)
+   .log();
 }
 
 ```
 
 ### JUnit Test
 
-* webclient without .block()
+WebClient 테스트에서 Mockito를 사용하기에는 너무 설정하는 값이 많아서 MockWebServer나 WireMockServer를 사용하는 것을 추천한다. 아래 예제는 WebClient의 URL을 동적으로 셋팅하는 설정도 포함한다.
 
+```gradle
+dependencies {
+    testImplementation group: 'com.squareup.okhttp3', name: 'okhttp', version: '4.9.1'
+    testImplementation group: 'com.squareup.okhttp3', name: 'mockwebserver', version: '4.9.1'
+    testImplementation("com.squareup.okhttp3:mockwebserver:4.9.1")
+    testImplementation group: 'io.projectreactor', name: 'reactor-test', version: '3.4.9'
+}
+```
 
-* webclient with .block()
+```java
+@DynamicPropertySource
+static void properties(DynamicPropertyRegistry r) {
+    r.add("user.server.url", () -> "http://localhost:" + mockBackEnd.getPort() + "/");
+}
+
+@Value("${user.server.url}")
+private String userServiceUrl;
+
+@Bean
+public WebClient webClient() {    
+   return WebClient.builder()
+   .baseUrl(StringUtils.isEmpty(userServiceUrl) ? GIT_BASE_URL_2 : userServiceUrl)
+   .build();
+}
+```
+
+1. UsageControllerMockWebServerTest
+    * MockWebServer를 사용하여 테스트한다. 
+    * /usage/user는 UserVo이기 때문에 response body확인하여 검증하였다.
+2. UsageControllerWireMockServerTest
+    * MockWebServer를 사용하여 테스트한다.
+    * /usage/user는 UserVo이기 때문에 response body확인하여 검증하였다.
+    * /usage/mono-user Mono<UserVo> 이기 때문에 response body를 확인할 수가 없다. 따라서 service endpoint에서 반환되는 Mono<UserVo>의 값을 StepVerifier로 검증한다.
+    * 나머지는 /usage/mono-user와 동일하다.
 
 
 ### 질문
 
-1. 실제 서비스하는 데에 Reactive, Non-Blocking하게만 구성할 수 있는지? API 결과 값으로 어떤 처리를 하느냐에 따라 다름 DB IO -> R2DBC, Logging
-2. 
+1. 실제서비스에서 Reactive, Non-Blocking하게만 사용할 수 있는지?
+2. Blocking처리가 꼭 필요한 경우(거의 대부분...) 어떤 식으로 처리하는게 나을지?
 
 ### Additional Links
 
@@ -196,3 +226,4 @@ public Mono<UserWithItem> mixUser(String id,String repoId){
 * [reactor.core.scheduler.Schedulers](https://projectreactor.io/docs/core/release/api/reactor/core/scheduler/Schedulers.html#elastic--)
 * [Schedulers-정리](https://devsh.tistory.com/entry/Schedulers-정리)
 * [Spring WebClient](https://dreamchaser3.tistory.com/11)
+* [spring-mocking-webclient](https://www.baeldung.com/spring-mocking-webclient)

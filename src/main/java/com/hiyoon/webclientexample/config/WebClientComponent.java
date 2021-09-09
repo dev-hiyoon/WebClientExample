@@ -55,7 +55,7 @@ public class WebClientComponent {
                                         .addHandlerLast(new WriteTimeoutHandler(3))));
 
         return WebClient.builder()
-                .baseUrl(StringUtils.isEmpty(userServiceUrl) ? GIT_BASE_URL_2 : userServiceUrl + "/")
+                .baseUrl(StringUtils.isEmpty(userServiceUrl) ? GIT_BASE_URL_2 : userServiceUrl)
                 .clientConnector(new ReactorClientHttpConnector(httpClient))
                 .build();
     }

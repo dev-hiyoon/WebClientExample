@@ -31,7 +31,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
-class UsageWebclientBlockControllerTest {
+class UsageControllerWireMockServerTest {
 
     @Autowired
     private MockMvc mockMvc;
@@ -43,7 +43,7 @@ class UsageWebclientBlockControllerTest {
 
     @DynamicPropertySource
     static void properties(DynamicPropertyRegistry r) {
-        r.add("user.server.url", () -> "http://localhost:" + wireMockServer.port());
+        r.add("user.server.url", () -> "http://localhost:" + wireMockServer.port() + "/");
     }
 
     @BeforeAll
@@ -63,6 +63,10 @@ class UsageWebclientBlockControllerTest {
         userVoResponse = mapper.writeValueAsString(userVo);
     }
 
+    /**
+     * block되어 response body를 확인할 수 있는 경우 아래와 같이 처리한다.
+     * @throws Exception
+     */
     @Test
     public void getUser() throws Exception {
         log.info("########### getUser started!");
@@ -81,17 +85,4 @@ class UsageWebclientBlockControllerTest {
         perform.andExpect(status().isOk())
                 .andDo(print());
     }
-
-    @Test
-    public void mergeUser() {
-    }
-
-    @Test
-    public void fetchUser() {
-    }
-
-    @Test
-    public void mixUser() {
-    }
-
 }
