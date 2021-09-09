@@ -17,8 +17,8 @@ public class RestTemplateComponent {
     public RestTemplate restTemplate() {
         HttpComponentsClientHttpRequestFactory factory = new HttpComponentsClientHttpRequestFactory();
         HttpClient client = HttpClientBuilder.create()
-                .setMaxConnTotal(50) // maxConnTotal은 연결을 유지할 최대 숫자
-                .setMaxConnPerRoute(20) // maxConnPerRoute는 특정 경로당 최대 숫자
+                .setMaxConnTotal(120) // maxConnTotal은 연결을 유지할 최대 숫자
+                .setMaxConnPerRoute(50) // maxConnPerRoute는 특정 경로당 최대 숫자
                 .build();
 
         factory.setHttpClient(client);

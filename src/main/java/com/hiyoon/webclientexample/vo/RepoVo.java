@@ -17,4 +17,5 @@ public class RepoVo {
     private String name;
     @JsonProperty("full_name")
     private String fullName;
+    private String nextPageYn;
 }

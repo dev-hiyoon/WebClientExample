@@ -15,4 +15,5 @@ public class UserVo {
     private String id;
     @JsonProperty("node_id")
     private String nodeId;
+    private String nextPageYn;
 }

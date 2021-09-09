@@ -9,6 +9,8 @@ import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.netty.http.client.HttpClient;
 
+import static com.hiyoon.webclientexample.codes.Const.GIT_BASE_URL_2;
+
 @Configuration
 public class WebClientComponent {
 
@@ -48,6 +50,7 @@ public class WebClientComponent {
                                         .addHandlerLast(new WriteTimeoutHandler(3))));
 
         return WebClient.builder()
+                .baseUrl(GIT_BASE_URL_2)
                 .clientConnector(new ReactorClientHttpConnector(httpClient))
                 .build();
     }

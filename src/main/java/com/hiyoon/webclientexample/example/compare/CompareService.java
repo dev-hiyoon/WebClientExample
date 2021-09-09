@@ -18,13 +18,13 @@ public class CompareService {
     private final WebClient webClient;
     private final RestTemplate restTemplate;
 
-//    public Mono<UserVo> getUserWithWebClientAndMono(String name) {
-//        log.info("################# getUserWithWebClient");
-//        return webClient.get()
-//                .uri(name)
-//                .retrieve()
-//                .bodyToMono(UserVo.class);
-//    }
+    public Mono<UserVo> getUserWithWebClientAndMono(String name) {
+        log.info("################# getUserWithWebClientAndMono");
+        return webClient.get()
+                .uri(name)
+                .retrieve()
+                .bodyToMono(UserVo.class);
+    }
 
     public UserVo getUserWithWebClient(String name) {
         log.info("################# getUserWithWebClient");
