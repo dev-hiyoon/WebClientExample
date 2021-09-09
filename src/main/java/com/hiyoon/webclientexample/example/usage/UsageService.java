@@ -21,7 +21,7 @@ public class UsageService {
 
     private final WebClient webClient;
 
-    private Mono<UserVo> getUser(String id) {
+    public Mono<UserVo> getUser(String id) {
         log.info("############# getUser. id: {}", id);
         return webClient.get()
                 .uri("users/v1/" + id)
@@ -49,7 +49,7 @@ public class UsageService {
     }
 
     public Flux<UserVo> mergeUser(String id) {
-        return Flux.merge(getUser(id), getOtherUser(id))
+        return Flux.merge(getUser(id), getUser(id))
                 .parallel()
                 .runOn(Schedulers.elastic())
                 .sequential()

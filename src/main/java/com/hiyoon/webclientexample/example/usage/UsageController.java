@@ -18,6 +18,16 @@ public class UsageController {
 
     private final UsageService usageService;
 
+    @GetMapping(value = "/user")
+    public UserVo getUser() {
+        return usageService.getUser("1").block();
+    }
+
+    @GetMapping(value = "/mono-user")
+    public Mono<UserVo> getMonoUser() {
+        return usageService.getUser("1");
+    }
+
     @GetMapping(value = "/merge-user")
     public Flux<UserVo> mergeUser() {
         return usageService.mergeUser("1");
